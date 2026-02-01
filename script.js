@@ -635,8 +635,9 @@ I chose you, every single day.
       snapBtn.addEventListener("click", () => {
         if (!video.videoWidth) return;
         const ctx = canvas.getContext("2d");
-        const targetW = screen.clientWidth || video.videoWidth;
-        const targetH = screen.clientHeight || video.videoHeight;
+        const rect = screen.getBoundingClientRect();
+        const targetW = Math.max(1, Math.round(rect.width || video.videoWidth));
+        const targetH = Math.max(1, Math.round(rect.height || video.videoHeight));
         const targetAspect = targetW / targetH;
         const sourceAspect = video.videoWidth / video.videoHeight;
         let sx = 0;
@@ -650,14 +651,13 @@ I chose you, every single day.
           sHeight = Math.round(video.videoWidth / targetAspect);
           sy = Math.round((video.videoHeight - sHeight) / 2);
         }
-        canvas.width = sWidth;
-        canvas.height = sHeight;
-        ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+        canvas.width = targetW;
+        canvas.height = targetH;
+        ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, targetW, targetH);
         if (filterImg && (filterImg.complete || filterImg.naturalWidth)) {
-          drawContain(ctx, filterImg, canvas.width, canvas.height);
+          drawContain(ctx, filterImg, targetW, targetH);
         }
-        setFrozen(true);
-        setTimeout(() => setFrozen(false), 250);
+        setFrozen(false);
 
         if (stripSlots.length) {
           for (let i = stripSlots.length - 1; i > 0; i--) {
