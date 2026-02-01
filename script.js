@@ -406,14 +406,6 @@ I chose you, every single day.
     });
   }
 
-  const toArBtn = document.getElementById("toArBtn");
-  if (toArBtn) {
-    toArBtn.addEventListener("click", () => {
-      if (app.currentScene !== "scene-map") return;
-      window.location.href = "ar.html";
-    });
-  }
-
   const toBoothBtn = document.getElementById("toBoothBtn");
   if (toBoothBtn) {
     toBoothBtn.addEventListener("click", () => {

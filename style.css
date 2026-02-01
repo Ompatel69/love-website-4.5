@@ -705,6 +705,18 @@ body.to-video .page-transition {
   z-index: 4;
 }
 .booth-next-btn { bottom: 78px; }
+.booth-cute-btn {
+  background: linear-gradient(120deg, #ffd1e8, #ff9ac2 55%, #ff6fae 100%);
+  color: #4b2c36;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  box-shadow: 0 18px 45px rgba(255,111,174,0.45);
+  animation: boothPulse 2.4s ease-in-out infinite;
+}
+@keyframes boothPulse {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.04); }
+}
 
 /* ===== PHOTO BOOTH SCENE ===== */
 #scene-photobooth {
