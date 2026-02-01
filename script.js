@@ -38,6 +38,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (app.currentScene === "scene-photobooth" && sceneId !== "scene-photobooth") {
       stopPhotoBooth();
     }
+    if (app.currentScene === "scene-video" && sceneId !== "scene-video") {
+      const video = document.getElementById("surpriseVideo");
+      const audioBtn = document.getElementById("mainAudioBtn");
+      if (video) {
+        video.pause();
+        video.muted = true;
+      }
+      if (audioBtn) audioBtn.textContent = "🔇";
+    }
     app.currentScene = sceneId;
     document.body.classList.toggle("photobooth-scroll", sceneId === "scene-photobooth");
     const skipBtn = document.getElementById("globalSkipBtn");
@@ -651,11 +660,11 @@ I chose you, every single day.
           sHeight = Math.round(video.videoWidth / targetAspect);
           sy = Math.round((video.videoHeight - sHeight) / 2);
         }
-        canvas.width = targetW;
-        canvas.height = targetH;
-        ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, targetW, targetH);
+        canvas.width = sWidth;
+        canvas.height = sHeight;
+        ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
         if (filterImg && (filterImg.complete || filterImg.naturalWidth)) {
-          drawContain(ctx, filterImg, targetW, targetH);
+          drawContain(ctx, filterImg, sWidth, sHeight);
         }
         setFrozen(false);
 

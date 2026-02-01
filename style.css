@@ -1048,6 +1048,12 @@ body.to-video .page-transition {
   }
   .booth-cheek.left { left: 22%; }
   .booth-cheek.right { right: 22%; }
+  .map-card {
+    width: min(320px, 92vw);
+  }
+  .map-option {
+    padding: 10px 14px;
+  }
 }
 
 
@@ -1326,6 +1332,8 @@ body.to-video .page-transition {
   border: 1px solid rgba(75,44,54,0.15);
   background: rgba(255,255,255,0.85);
   cursor: pointer;
+  color: #4b2c36;
+  font-size: 0.95rem;
 }
 .map-option.correct {
   border-color: #4caf50;
