@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR Photo</title>
+    <style>
+      :root {
+        --bg1: #ffd3e4;
+        --bg2: #ff9ac2;
+        --bg3: #ff6fae;
+      }
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      .fake-ar {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background:
+          radial-gradient(900px 600px at 10% 10%, rgba(255,255,255,0.7), rgba(255,255,255,0) 60%),
+          radial-gradient(800px 600px at 90% 80%, rgba(255,220,235,0.9), rgba(255,220,235,0) 60%),
+          linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 100%);
+      }
+      .scan-frame {
+        position: absolute;
+        inset: 8% 6%;
+        border-radius: 22px;
+        border: 2px solid rgba(255,255,255,0.5);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+        backdrop-filter: blur(4px);
+      }
+      .scan-line {
+        position: absolute;
+        left: 10%;
+        right: 10%;
+        height: 2px;
+        background: rgba(255,255,255,0.8);
+        top: 20%;
+        animation: scanMove 4s ease-in-out infinite;
+        box-shadow: 0 0 18px rgba(255,255,255,0.8);
+      }
+      @keyframes scanMove {
+        0% { top: 18%; opacity: 0.2; }
+        50% { top: 70%; opacity: 1; }
+        100% { top: 18%; opacity: 0.2; }
+      }
+      .hint {
+        position: absolute;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 16px;
+        border-radius: 999px;
+        color: #fff;
+        background: rgba(0,0,0,0.45);
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        z-index: 10;
+      }
+      .photo-wrap {
+        position: absolute;
+        left: 50%;
+        top: 52%;
+        transform: translate(-50%, -50%);
+        width: min(70vw, 380px);
+        aspect-ratio: 3 / 4;
+        border-radius: 24px;
+        background: rgba(255,255,255,0.25);
+        box-shadow: 0 40px 100px rgba(0,0,0,0.35);
+        overflow: hidden;
+        animation: floatUp 4.5s ease-in-out infinite;
+        will-change: transform;
+      }
+      .photo-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: drop-shadow(0 30px 60px rgba(0,0,0,0.35));
+      }
+      @keyframes floatUp {
+        0%,100% { transform: translate(-50%, -50%) rotate(-1deg) scale(1); }
+        50% { transform: translate(-50%, -54%) rotate(1deg) scale(1.02); }
+      }
+      .glow {
+        position: absolute;
+        inset: -20%;
+        background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25), rgba(255,255,255,0) 60%);
+        animation: glowPulse 6s ease-in-out infinite;
+        pointer-events: none;
+        will-change: transform;
+      }
+      @keyframes glowPulse {
+        0%,100% { transform: scale(1); opacity: 0.7; }
+        50% { transform: scale(1.08); opacity: 1; }
+      }
+      .sparkles span {
+        position: absolute;
+        font-size: 18px;
+        opacity: 0.7;
+        animation: sparkle 3.5s ease-in-out infinite;
+      }
+      .sparkles span:nth-child(1) { left: 18%; top: 20%; animation-delay: 0s; }
+      .sparkles span:nth-child(2) { left: 78%; top: 32%; animation-delay: .6s; }
+      .sparkles span:nth-child(3) { left: 22%; top: 70%; animation-delay: 1.2s; }
+      .sparkles span:nth-child(4) { left: 74%; top: 76%; animation-delay: 1.8s; }
+      @keyframes sparkle {
+        0%,100% { transform: scale(1); opacity: 0.4; }
+        50% { transform: scale(1.3); opacity: 1; }
+      }
+      .voice-tip {
+        position: fixed;
+        left: 50%;
+        bottom: 20px;
+        transform: translateX(-50%);
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(0,0,0,0.55);
+        color: #fff;
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        z-index: 12;
+        display: none;
+      }
+      .voice-btn {
+        position: fixed;
+        left: 50%;
+        bottom: 64px;
+        transform: translateX(-50%);
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: 0;
+        background: rgba(255,255,255,0.9);
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 12;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="fake-ar">
+      <div class="hint">AR Photo ✨</div>
+      <div class="scan-frame">
+        <div class="scan-line"></div>
+      </div>
+      <div class="glow"></div>
+      <div class="photo-wrap">
+        <img src="ar-photo.png" alt="AR Photo">
+      </div>
+      <div class="sparkles" aria-hidden="true">
+        <span>✨</span><span>💫</span><span>✨</span><span>💖</span>
+      </div>
+    </div>
+    <button class="voice-btn" id="voiceBtn" type="button">Enable voice ✨</button>
+    <div class="voice-tip" id="voiceTip">Say “khul ja sim sim” to continue</div>
+    <script>
+      const photo = document.querySelector(".photo-wrap");
+      const glow = document.querySelector(".glow");
+      const voiceBtn = document.getElementById("voiceBtn");
+      const voiceTip = document.getElementById("voiceTip");
+
+      const setParallax = (x, y) => {
+        const dx = (x - 0.5) * 12;
+        const dy = (y - 0.5) * 12;
+        photo.style.transform = `translate(-50%, -50%) translate(${dx}px, ${dy}px)`;
+        glow.style.transform = `translate(${dx * 0.6}px, ${dy * 0.6}px)`;
+      };
+
+      window.addEventListener("mousemove", (e) => {
+        const x = e.clientX / window.innerWidth;
+        const y = e.clientY / window.innerHeight;
+        setParallax(x, y);
+      });
+
+      const enableDeviceTilt = async () => {
+        if (typeof DeviceOrientationEvent === "undefined") return;
+        if (typeof DeviceOrientationEvent.requestPermission === "function") {
+          const res = await DeviceOrientationEvent.requestPermission();
+          if (res !== "granted") return;
+        }
+        window.addEventListener("deviceorientation", (e) => {
+          const x = (e.gamma || 0) / 90 * 0.5 + 0.5;
+          const y = (e.beta || 0) / 180 * 0.5 + 0.5;
+          setParallax(x, y);
+        });
+      };
+
+      const goBirthday = () => {
+        window.location.href = "index.html?scene=birthday";
+      };
+
+      const startVoice = () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          voiceTip.textContent = "Voice not supported. Tap to continue.";
+          voiceTip.style.display = "block";
+          voiceBtn.textContent = "Go to birthday";
+          voiceBtn.onclick = goBirthday;
+          voiceBtn.style.display = "block";
+          return;
+        }
+        const recognition = new SpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.onresult = (event) => {
+          const last = event.results[event.results.length - 1][0].transcript.toLowerCase();
+          if (last.includes("khul ja sim sim") || last.includes("khulja sim sim")) {
+            recognition.stop();
+            goBirthday();
+          }
+        };
+        recognition.onerror = () => {
+          voiceTip.textContent = "Voice blocked. Tap to continue.";
+          voiceBtn.textContent = "Go to birthday";
+          voiceBtn.onclick = goBirthday;
+          voiceBtn.style.display = "block";
+        };
+        recognition.start();
+      };
+
+      // After 2 seconds, prompt for voice
+      setTimeout(() => {
+        voiceTip.style.display = "block";
+        voiceBtn.style.display = "block";
+      }, 2000);
+
+      voiceBtn.addEventListener("click", async () => {
+        voiceBtn.textContent = "Listening…";
+        await enableDeviceTilt();
+        startVoice();
+      });
+    </script>
+  </body>
+</html>

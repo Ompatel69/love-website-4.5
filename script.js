@@ -1,0 +1,676 @@
+document.addEventListener("DOMContentLoaded", () => {
+  // --- internal scheduler to prevent old timers firing after scene changes ---
+  const app = {
+    token: 0,
+    timeouts: new Set(),
+    signatureIdleId: null,
+    typedStarted: false,
+    memoriesRunning: false,
+    currentScene: "scene-intro",
+    cameraStream: null,
+    boothInit: false,
+    boothFrozen: false,
+  };
+
+  function setAppTimeout(fn, ms) {
+    const myToken = app.token;
+    const id = window.setTimeout(() => {
+      app.timeouts.delete(id);
+      if (app.token !== myToken) return;
+      fn();
+    }, ms);
+    app.timeouts.add(id);
+    return id;
+  }
+
+  function clearAllTimers() {
+    for (const id of app.timeouts) window.clearTimeout(id);
+    app.timeouts.clear();
+    if (app.signatureIdleId) {
+      window.clearTimeout(app.signatureIdleId);
+      app.signatureIdleId = null;
+    }
+  }
+
+  function go(sceneId) {
+    app.token++;
+    clearAllTimers();
+    if (app.currentScene === "scene-photobooth" && sceneId !== "scene-photobooth") {
+      stopPhotoBooth();
+    }
+    app.currentScene = sceneId;
+
+    document.querySelectorAll(".scene").forEach(s => s.classList.remove("active"));
+    const el = document.getElementById(sceneId);
+    if (!el) return;
+    el.classList.add("active");
+
+    if (sceneId === "scene-intro") startTyping();
+    if (sceneId === "scene-memories") playMemoriesCamera(true);
+    if (sceneId === "scene-letter") initLetterScene();
+    if (sceneId === "scene-video") initVideoScene();
+    if (sceneId === "scene-map") initMapScene();
+    if (sceneId === "scene-photobooth") initPhotoBooth();
+  }
+
+  // ---------------- INTRO TYPING ----------------
+  function startTyping() {
+    if (app.typedStarted) return;
+    app.typedStarted = true;
+
+    new Typed("#typed", {
+      strings: [
+        "Hey Love ❤️",
+        "I made something special for you…",
+        "To the most beautiful gatudi in the whole world 💖"
+      ],
+      typeSpeed: 50,
+      showCursor: false,
+      onComplete: () => {
+        const box = document.getElementById("signatureBox");
+        if (box) box.style.display = "flex";
+        initSignature();
+      }
+    });
+  }
+
+  // ---------------- SIGNATURE PAD ----------------
+  function initSignature() {
+    const canvas = document.getElementById("signaturePad");
+    const clearBtn = document.getElementById("clearSign");
+    if (!canvas || !clearBtn) return;
+
+    const ctx = canvas.getContext("2d");
+    let drawing = false;
+    let hasDrawn = false;
+
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#000";
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const p = (e.touches && e.touches[0]) ? e.touches[0] : e;
+      return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+    }
+
+    function armIdle() {
+      if (app.signatureIdleId) window.clearTimeout(app.signatureIdleId);
+      app.signatureIdleId = window.setTimeout(() => {
+        if (app.currentScene !== "scene-intro") return;
+        app.signatureIdleId = null;
+        if (hasDrawn) triggerSigned();
+      }, 2800);
+    }
+
+    function start(e) {
+      drawing = true;
+      hasDrawn = true;
+      if (app.signatureIdleId) window.clearTimeout(app.signatureIdleId);
+      const p = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    }
+    function draw(e) {
+      if (!drawing) return;
+      const p = getPos(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      armIdle();
+    }
+    function stop() {
+      drawing = false;
+      armIdle();
+    }
+
+    canvas.onmousedown = start;
+    canvas.onmousemove = draw;
+    window.onmouseup = stop;
+
+    canvas.ontouchstart = start;
+    canvas.ontouchmove = draw;
+    canvas.ontouchend = stop;
+
+    clearBtn.onclick = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasDrawn = false;
+      if (app.signatureIdleId) window.clearTimeout(app.signatureIdleId);
+      app.signatureIdleId = null;
+    };
+  }
+
+  function triggerSigned() {
+    if (app.currentScene !== "scene-intro") return;
+    const overlay = document.getElementById("rainbowOverlay");
+    if (!overlay) return;
+
+    overlay.classList.add("active");
+    setAppTimeout(() => overlay.classList.add("intense"), 1200);
+
+    setAppTimeout(() => {
+      overlay.classList.remove("active", "intense");
+      go("scene-memories");
+    }, 2800);
+  }
+
+  // ---------------- MEMORIES CAMERA ----------------
+  function playMemoriesCamera(reset = false) {
+    const world = document.getElementById("memoriesWorld");
+    const btn = document.getElementById("beforeYouGoBtn");
+    if (!world || !btn) return;
+
+    if (reset) {
+      world.style.transform = "translateX(0vw)";
+      btn.classList.remove("show");
+      app.memoriesRunning = false;
+    }
+    if (app.memoriesRunning) return;
+    app.memoriesRunning = true;
+
+    let col = 0;
+    const totalCols = document.querySelectorAll(".memory-col").length;
+
+    function move() {
+      world.style.transform = `translateX(-${col * 100}vw)`;
+      col++;
+      if (col < totalCols) setAppTimeout(move, 3200);
+      else setAppTimeout(() => btn.classList.add("show"), 1200);
+    }
+
+    setAppTimeout(move, 900);
+  }
+
+  const beforeBtn = document.getElementById("beforeYouGoBtn");
+  if (beforeBtn) beforeBtn.onclick = () => go("scene-letter");
+
+  // ---------------- LETTER SCENE ----------------
+  function initLetterScene() {
+    const env = document.getElementById("envelope");
+    const flap = document.getElementById("flapBtn");
+    const tip = document.getElementById("flapTip");
+    const slot = document.getElementById("letterSlot");
+    const letter = document.getElementById("letterCard");
+    const hint = document.getElementById("letterHint");
+    const magic = document.getElementById("magicText");
+
+    if (!env || !flap || !slot || !letter || !magic) return;
+
+    // Reset every time we enter letter scene
+    env.classList.remove("flap-open", "drop-down");
+    slot.classList.remove("expanded");
+    letter.classList.remove("full-open");
+    magic.innerHTML = "";
+    if (tip) tip.classList.add("show");
+    if (hint) hint.textContent = "Drag the flap ✨";
+    document.body.classList.remove("letter-open");
+    const gifBtn = document.getElementById("gifNextBtn");
+    if (gifBtn) gifBtn.classList.remove("show");
+
+    let flapOpened = false;
+    let pulled = false;
+
+    // ---------- FLAP OPEN ----------
+    function openFlap() {
+      if (flapOpened) return;
+      flapOpened = true;
+
+      env.classList.add("flap-open");
+      if (tip) tip.classList.remove("show");
+      if (hint) hint.textContent = "Now drag the letter 💌";
+
+      // Put the peek message (simple + reliable)
+      magic.innerHTML = `
+      <div class="peek-cover">
+        READ THIS CUTIEPIE
+        <small>(drag the letter up 💌)</small>
+      </div>
+    `;
+
+      // allow letter interactions now
+      slot.style.pointerEvents = "auto";
+      letter.style.pointerEvents = "auto";
+    }
+
+    // Drag flap up OR click flap
+    let flapStartY = 0;
+    let flapDragging = false;
+
+    flap.onpointerdown = (e) => {
+      if (flapOpened) return;
+      flapDragging = true;
+      flapStartY = e.clientY;
+      flap.setPointerCapture(e.pointerId);
+    };
+
+    flap.onpointermove = (e) => {
+      if (!flapDragging || flapOpened) return;
+      const dy = flapStartY - e.clientY;
+      if (dy > 35) openFlap();
+    };
+
+    flap.onpointerup = () => { flapDragging = false; };
+    flap.onclick = () => openFlap();
+
+    // ---------- PULL LETTER ----------
+    function pullLetter() {
+      if (pulled || !flapOpened) return;
+      pulled = true;
+
+      // Clear peek message before real magic reveal
+      magic.innerHTML = "";
+
+      // Expand slot full screen (no reparenting = no disappearing)
+      slot.classList.add("expanded");
+      letter.classList.add("full-open");
+      document.body.classList.add("letter-open");
+
+      // Keep envelope in place; drop-down on a transformed parent causes the
+      // fixed fullscreen letter to move off-screen in Chrome/Edge.
+
+      // Start magic text after fullscreen is stable
+      setTimeout(() => startMagicText(), 750);
+
+      if (hint) hint.textContent = "✨";
+    }
+
+    // Drag letter up OR click (listen on slot so the peek area always works)
+    let letterStartY = 0;
+    let letterDragging = false;
+
+    const attachPullHandlers = (target, threshold) => {
+      target.onpointerdown = (e) => {
+        if (!flapOpened || pulled) return;
+        letterDragging = true;
+        letterStartY = e.clientY;
+        target.setPointerCapture(e.pointerId);
+      };
+
+      target.onpointermove = (e) => {
+        if (!letterDragging || pulled) return;
+        const dy = letterStartY - e.clientY;
+        if (dy > threshold) pullLetter();
+      };
+
+      target.onpointerup = () => { letterDragging = false; };
+      target.onclick = () => pullLetter();
+    };
+
+    attachPullHandlers(slot, 70);
+    attachPullHandlers(letter, 90);
+  }
+
+
+  function startMagicText() {
+    const container = document.getElementById("magicText");
+    if (!container) return;
+
+    const text = `
+I don’t always say this out loud,
+but you are my favorite part of every day.
+You make life softer, warmer,
+and infinitely more beautiful.
+
+This letter is proof —
+I chose you, every single day.
+  `.trim();
+
+    container.innerHTML = "";
+
+    const words = text.split(/\s+/);
+    words.forEach((word, i) => {
+      const span = document.createElement("span");
+      span.className = "magic-word";
+      span.style.animationDelay = `${i * 0.11}s`;
+      span.textContent = word + " ";
+      container.appendChild(span);
+    });
+
+    // Show GIF button after the final word finishes its reveal
+    const gifBtn = document.getElementById("gifNextBtn");
+    if (gifBtn) {
+      const totalMs = (words.length - 1) * 110 + 800;
+      setTimeout(() => gifBtn.classList.add("show"), totalMs);
+    }
+  }
+
+
+  // ---------------- START ----------------
+  // ======= DEBUG: OPEN ANY SCENE DIRECTLY =======
+  const params = new URLSearchParams(window.location.search);
+  const sceneParamRaw = (params.get("scene") || "").toLowerCase().trim();
+
+  if (sceneParamRaw) {
+    const directId = sceneParamRaw.startsWith("scene-")
+      ? sceneParamRaw
+      : `scene-${sceneParamRaw}`;
+    const target = document.getElementById(directId);
+    if (target) {
+      go(directId);
+    } else {
+      go("scene-intro");
+    }
+  } else {
+    go("scene-intro");
+  }
+
+  // ---------------- VIDEO SCENE ----------------
+  function initVideoScene() {
+    const video = document.getElementById("surpriseVideo");
+    const seek = document.getElementById("mainSeek");
+    const audioBtn = document.getElementById("mainAudioBtn");
+    if (!video) return;
+    if (seek) wireSeekbar(video, seek);
+    if (audioBtn) {
+      audioBtn.onclick = () => {
+        video.muted = !video.muted;
+        audioBtn.textContent = video.muted ? "🔇" : "🔊";
+      };
+    }
+    // Try to autoplay; user click should allow play if browser blocks autoplay
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.then(() => {
+        // Unmute when autoplay succeeds
+        video.muted = false;
+        if (audioBtn) audioBtn.textContent = "🔊";
+      }).catch(() => {
+        if (audioBtn) audioBtn.textContent = "🔇";
+      });
+    }
+  }
+
+  // GIF button transition to video scene
+  const gifBtn = document.getElementById("gifNextBtn");
+  if (gifBtn) {
+    gifBtn.addEventListener("click", () => {
+      if (app.currentScene !== "scene-letter") return;
+      document.body.classList.remove("letter-open");
+      document.body.classList.add("to-video");
+      setTimeout(() => {
+        document.body.classList.remove("to-video");
+        go("scene-video");
+      }, 900);
+    });
+  }
+
+  // Video -> Map
+  const toMapBtn = document.getElementById("toMapBtn");
+  if (toMapBtn) {
+    toMapBtn.addEventListener("click", () => {
+      if (app.currentScene !== "scene-video") return;
+      document.body.classList.add("to-video");
+      setTimeout(() => {
+        document.body.classList.remove("to-video");
+        go("scene-map");
+      }, 900);
+    });
+  }
+
+  const toArBtn = document.getElementById("toArBtn");
+  if (toArBtn) {
+    toArBtn.addEventListener("click", () => {
+      if (app.currentScene !== "scene-map") return;
+      window.location.href = "ar.html";
+    });
+  }
+
+  const toBoothBtn = document.getElementById("toBoothBtn");
+  if (toBoothBtn) {
+    toBoothBtn.addEventListener("click", () => {
+      if (app.currentScene !== "scene-map") return;
+      go("scene-photobooth");
+    });
+  }
+
+  const toBirthdayBtn = document.getElementById("toBirthdayBtn");
+  if (toBirthdayBtn) {
+    toBirthdayBtn.addEventListener("click", () => {
+      if (app.currentScene !== "scene-photobooth") return;
+      go("scene-birthday");
+    });
+  }
+
+  function initMapScene() {
+    const map = document.getElementById("mapCanvas");
+    const card = document.getElementById("mapCard");
+    const title = document.getElementById("mapCardTitle");
+    const caption = document.getElementById("mapCardCaption");
+    const close = document.getElementById("mapClose");
+    const quiz = document.getElementById("mapQuiz");
+    const question = document.getElementById("mapQuestion");
+    const feedback = document.getElementById("mapFeedback");
+    const options = Array.from(document.querySelectorAll(".map-option"));
+    const media = document.getElementById("mapMedia");
+    const mapVideo = document.getElementById("mapVideo");
+    const mapPhoto = document.getElementById("mapPhoto");
+    const mapSeek = document.getElementById("mapSeek");
+    const audioBtn = document.getElementById("mapAudioBtn");
+    if (!map || !card || !title || !caption || !close) return;
+    if (!quiz || !question || !feedback || !media || !mapVideo || !mapPhoto || !audioBtn) return;
+    if (mapSeek) wireSeekbar(mapVideo, mapSeek);
+
+    const positionCard = (pinEl) => {
+      const mapRect = map.getBoundingClientRect();
+      const pinRect = pinEl.getBoundingClientRect();
+
+      const pinX = pinRect.left - mapRect.left + pinRect.width / 2;
+      const pinY = pinRect.top - mapRect.top + pinRect.height / 2;
+
+      const padding = 16;
+      const gap = 14;
+
+      // Ensure card is measurable
+      card.style.left = `${pinX}px`;
+      card.style.top = `${pinY + gap}px`;
+      const cardRect = card.getBoundingClientRect();
+      const cardW = cardRect.width;
+      const cardH = cardRect.height;
+
+      let left = pinX;
+      let top = pinY + gap;
+
+      const maxLeft = mapRect.width - padding - cardW / 2;
+      const minLeft = padding + cardW / 2;
+      left = Math.min(Math.max(left, minLeft), maxLeft);
+
+      const fitsBelow = (pinY + gap + cardH) <= (mapRect.height - padding);
+      const fitsAbove = (pinY - gap - cardH) >= padding;
+      if (!fitsBelow && fitsAbove) {
+        top = pinY - gap - cardH;
+      } else if (!fitsBelow && !fitsAbove) {
+        top = mapRect.height - padding - cardH;
+      }
+
+      card.style.left = `${left}px`;
+      card.style.top = `${top}px`;
+    };
+
+    map.querySelectorAll(".map-pin").forEach(pin => {
+      pin.onclick = () => {
+        const correct = (pin.getAttribute("data-correct") || "").toLowerCase();
+        title.textContent = pin.getAttribute("data-title") || "";
+        caption.textContent = pin.getAttribute("data-caption") || "";
+        question.textContent = pin.getAttribute("data-question") || "A sweet question for you";
+        options.forEach(btn => {
+          const key = btn.getAttribute("data-opt");
+          const text = pin.getAttribute(`data-option-${key}`) || "";
+          btn.textContent = text;
+          btn.classList.remove("correct", "wrong");
+          btn.disabled = false;
+        });
+        feedback.textContent = "";
+        quiz.style.display = "block";
+        media.classList.remove("active", "show-photo");
+        card.classList.remove("expanded");
+        mapVideo.pause();
+        mapVideo.removeAttribute("src");
+        mapVideo.load();
+        mapPhoto.removeAttribute("src");
+        mapPhoto.alt = "";
+        mapVideo.muted = true;
+        audioBtn.textContent = "🔇";
+
+        const videoSrc = pin.getAttribute("data-video") || "";
+        const photoSrc = pin.getAttribute("data-img") || "";
+
+        const onOptionClick = (e) => {
+          const choice = (e.currentTarget.getAttribute("data-opt") || "").toLowerCase();
+          options.forEach(btn => btn.disabled = true);
+          if (choice === correct) {
+            e.currentTarget.classList.add("correct");
+            feedback.textContent = "Correct! Unlocking your memory...";
+            quiz.style.display = "none";
+            media.classList.add("active");
+            card.classList.add("expanded");
+            card.style.left = "";
+            card.style.top = "";
+            mapVideo.src = videoSrc;
+            mapVideo.muted = true;
+            const p = mapVideo.play();
+            if (p && typeof p.then === "function") {
+              p.then(() => {
+                mapVideo.muted = false;
+                audioBtn.textContent = "🔊";
+              }).catch(() => {
+                audioBtn.textContent = "🔇";
+              });
+            }
+            mapVideo.onended = () => {
+              mapPhoto.src = photoSrc;
+              mapPhoto.alt = title.textContent || "Memory";
+              media.classList.add("show-photo");
+            };
+          } else {
+            e.currentTarget.classList.add("wrong");
+            feedback.textContent = "Try again 💞";
+            options.forEach(btn => btn.disabled = false);
+            e.currentTarget.classList.remove("wrong");
+          }
+        };
+
+        options.forEach(btn => {
+          btn.onclick = onOptionClick;
+        });
+
+        audioBtn.onclick = () => {
+          mapVideo.muted = !mapVideo.muted;
+          audioBtn.textContent = mapVideo.muted ? "🔇" : "🔊";
+        };
+
+        card.classList.add("show");
+        requestAnimationFrame(() => positionCard(pin));
+      };
+    });
+
+    close.onclick = () => {
+      card.classList.remove("show");
+      card.classList.remove("expanded");
+      mapVideo.pause();
+    };
+    map.onclick = (e) => {
+      if (!e.target.closest(".map-pin") && !e.target.closest("#mapCard")) {
+        card.classList.remove("show");
+      }
+    };
+  }
+
+  // ---------------- PHOTO BOOTH ----------------
+  function initPhotoBooth() {
+    const video = document.getElementById("boothVideo");
+    const canvas = document.getElementById("boothCanvas");
+    const screen = document.getElementById("boothScreen");
+    const snapBtn = document.getElementById("boothSnapBtn");
+    const retakeBtn = document.getElementById("boothRetakeBtn");
+    const stripSlots = Array.from(document.querySelectorAll(".strip-slot img"));
+    const errorEl = document.getElementById("boothError");
+    if (!video || !canvas || !screen || !snapBtn || !retakeBtn) return;
+
+    const setFrozen = (frozen) => {
+      app.boothFrozen = frozen;
+      screen.classList.toggle("frozen", frozen);
+    };
+
+    if (!app.boothInit) {
+      app.boothInit = true;
+
+      snapBtn.addEventListener("click", () => {
+        if (!video.videoWidth) return;
+        const ctx = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        setFrozen(true);
+
+        if (stripSlots.length) {
+          for (let i = stripSlots.length - 1; i > 0; i--) {
+            stripSlots[i].src = stripSlots[i - 1].src || "";
+          }
+          stripSlots[0].src = canvas.toDataURL("image/png");
+          stripSlots[0].alt = "Booth photo";
+        }
+      });
+
+      retakeBtn.addEventListener("click", () => {
+        setFrozen(false);
+      });
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (errorEl) errorEl.textContent = "Camera not supported on this device.";
+      return;
+    }
+
+    if (!app.cameraStream) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+        .then(stream => {
+          app.cameraStream = stream;
+          video.srcObject = stream;
+          return video.play();
+        })
+        .then(() => {
+          setFrozen(false);
+          if (errorEl) errorEl.textContent = "";
+        })
+        .catch(() => {
+          if (errorEl) errorEl.textContent = "Allow camera access to use the photo booth.";
+        });
+    } else {
+      video.srcObject = app.cameraStream;
+      video.play().catch(() => {});
+    }
+  }
+
+  function stopPhotoBooth() {
+    if (app.cameraStream) {
+      app.cameraStream.getTracks().forEach(track => track.stop());
+      app.cameraStream = null;
+    }
+    const screen = document.getElementById("boothScreen");
+    if (screen) screen.classList.remove("frozen");
+    app.boothFrozen = false;
+  }
+
+  function wireSeekbar(video, seek) {
+    if (!video || !seek) return;
+    const setMax = () => {
+      if (Number.isFinite(video.duration)) {
+        seek.max = video.duration.toString();
+      }
+    };
+    video.addEventListener("loadedmetadata", setMax);
+    video.addEventListener("durationchange", setMax);
+    video.addEventListener("timeupdate", () => {
+      if (!seek.matches(":active")) {
+        seek.value = video.currentTime.toString();
+      }
+    });
+    seek.addEventListener("input", () => {
+      video.currentTime = parseFloat(seek.value || "0");
+    });
+    // Quick tap on video toggles play/pause
+    video.addEventListener("click", () => {
+      if (video.paused) video.play().catch(() => {});
+      else video.pause();
+    });
+  }
+});

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>For You ❤️</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;400;600&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Typed.js -->
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+</head>
+
+<body>
+
+  <!-- 🌈 RAINBOW OVERLAY -->
+  <div id="rainbowOverlay" class="rainbow-overlay" aria-hidden="true"></div>
+  <!-- Page transition overlay -->
+  <div id="pageTransition" class="page-transition" aria-hidden="true"></div>
+
+  <!-- ================= INTRO ================= -->
+  <section class="scene active" id="scene-intro">
+    <div class="intro-content">
+      <div id="typed" class="typed-text"></div>
+
+      <div id="signatureBox" class="signature-box">
+        <p class="sign-label">Sign here ✍️</p>
+        <canvas id="signaturePad" width="320" height="160"></canvas>
+        <button id="clearSign" type="button">Clear</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MEMORIES ================= -->
+  <section class="scene" id="scene-memories">
+    <header class="memories-header">
+      <h1>Years ❤️</h1>
+    </header>
+
+    <div class="memories-viewport">
+      <div class="memories-world" id="memoriesWorld">
+        <div class="memory-col">
+          <div class="memory-year">2020</div>
+          <div class="memory-photos">
+            <div class="polaroid"><img src="img 2020(1).jpg" alt=""><span>💌</span></div>
+          <div class="polaroid"><img src="img2020(2).jpg" alt=""><span>✨</span></div>
+          </div>
+        </div>
+        <div class="memory-col">
+          <div class="memory-year">2021</div>
+          <div class="memory-photos">
+            <div class="polaroid"><img src="img2021(1).jpg" alt=""><span>🌸</span></div>
+          <div class="polaroid"><img src="img2021(2).jpg" alt=""><span>🫶</span></div>
+          </div>
+        </div>
+        <div class="memory-col">
+          <div class="memory-year">2022</div>
+          <div class="memory-photos">
+            <div class="polaroid"><img src="img2022(1).jpg" alt=""><span>🌙</span></div>
+          <div class="polaroid"><img src="img2022(2).jpg" alt=""><span>💖</span></div>
+          </div>
+        </div>
+        <div class="memory-col">
+          <div class="memory-year">2023</div>
+          <div class="memory-photos">
+            <div class="polaroid"><img src="img2023(1).jpg" alt=""><span>🌈</span></div>
+          <div class="polaroid"><img src="img2023(2).jpg" alt=""><span>🥹</span></div>
+          </div>
+        </div>
+        <div class="memory-col">
+          <div class="memory-year">2024</div>
+          <div class="memory-photos">
+            <div class="polaroid"><img src="img2024(1).jpg" alt=""><span>🌹</span></div>
+          <div class="polaroid"><img src="img2024(2).jpg" alt=""><span>♾️</span></div>
+          </div>
+        </div>
+        <div class="memory-col">
+          <div class="memory-year">2025</div>
+          <div class="memory-photos">
+            <div class="polaroid"><img src="img2025(1).jpg" alt=""><span>🌹</span></div>
+          <div class="polaroid"><img src="img2025(2).jpg" alt=""><span>♾️</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button id="beforeYouGoBtn" class="before-btn" type="button">Before you go 💕</button>
+  </section>
+
+  <!-- ================= LETTER ================= -->
+  <section class="scene" id="scene-letter">
+    <div class="letter-bg-orbs" aria-hidden="true">
+      <div class="orb"></div>
+      <div class="orb"></div>
+      <div class="orb"></div>
+    </div>
+
+    <div class="letter-stage">
+      <h2 class="letter-title">A letter for you 💌</h2>
+
+      <div class="envelope-shell">
+        <div class="env-body" id="envelope">
+
+          <div class="tip-bubble" id="flapTip">Drag the flap to open ✨</div>
+
+          <!-- flap -->
+          <div class="env-flap" id="flapBtn" aria-label="Drag flap to open"></div>
+          <div class="peek-label" id="peekLabel">
+            <div class="peek-title">READ THIS CUTIEPIE</div>
+            <div class="peek-sub">(drag the letter up 💌)</div>
+          </div>
+
+
+          <!-- letter slot (mask) -->
+          <div class="letter-slot" id="letterSlot">
+            <div class="env-letter" id="letterCard" aria-label="Drag letter up">
+              <div class="letter-top">
+                <div class="seal">🫶</div>
+                <div class="hint" id="letterHint">Drag the flap ✨</div>
+              </div>
+              <div class="letter-paper">
+                <div class="magic-text" id="magicText"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- front shape -->
+          <div class="env-front" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <!-- GIF button (appears after letter reveal) -->
+      <button id="gifNextBtn" class="gif-next-btn" type="button" aria-label="Go to video">
+        <img src="me.gif" alt="Your gif">
+      </button>
+    </div>
+  </section>
+
+  <!-- ================= VIDEO ================= -->
+  <section class="scene" id="scene-video">
+    <div class="video-stage">
+      <div class="love-emojis" aria-hidden="true">
+        <span>💖</span><span>💘</span><span>💞</span><span>💗</span><span>💓</span>
+        <span>💕</span><span>💝</span><span>💖</span><span>💘</span><span>💞</span>
+        <span>💗</span><span>💓</span><span>💕</span><span>💝</span><span>💖</span>
+      </div>
+      <div class="video-glow" aria-hidden="true"></div>
+      <div class="video-card">
+        <div class="tablet-frame">
+          <div class="tablet-bezel">
+            <div class="tablet-camera"></div>
+            <div class="tablet-screen">
+              <video id="surpriseVideo" src="surprise.mp4" playsinline autoplay muted></video>
+              <div class="seek-wrap">
+                <input id="mainSeek" class="seekbar" type="range" min="0" max="100" value="0" step="0.01"
+                  aria-label="Video seek" />
+              </div>
+              <button id="mainAudioBtn" class="video-audio-btn" type="button" aria-label="Toggle sound">🔇</button>
+            </div>
+            <div class="tablet-home"></div>
+          </div>
+        </div>
+      </div>
+
+      <button id="toMapBtn" class="next-map-btn" type="button">Open our memory map ✨</button>
+    </div>
+  </section>
+
+  <!-- ================= MEMORY MAP ================= -->
+  <section class="scene" id="scene-map">
+    <div class="map-stage">
+      <header class="map-header">
+        <h2>Our Memory Map 💞</h2>
+        <p>Tap a pin to open a moment.</p>
+      </header>
+
+      <div class="map-canvas" id="mapCanvas">
+        <div class="map-glow"></div>
+
+        <button class="map-pin"
+          data-title="First Date"
+          data-caption="The day everything felt new."
+          data-img="mem3.jpg"
+          data-video="surprise.mp4"
+          data-question="When did we first hang out?"
+          data-option-a="A sunny afternoon"
+          data-option-b="A rainy evening"
+          data-option-c="A cozy morning"
+          data-option-d="A late night"
+          data-correct="b"
+          style="left: 18%; top: 28%;">
+          <span>📍</span>
+        </button>
+        <button class="map-pin"
+          data-title="Favorite Spot"
+          data-caption="Our little corner in the world."
+          data-img="mem6.jpg"
+          data-video="surprise.mp4"
+          data-question="What do we always order there?"
+          data-option-a="Fries to share"
+          data-option-b="Hot chocolate"
+          data-option-c="Pasta"
+          data-option-d="Ice cream"
+          data-correct="a"
+          style="left: 62%; top: 22%;">
+          <span>📍</span>
+        </button>
+        <button class="map-pin"
+          data-title="That Sunset"
+          data-caption="The sky was jealous of you."
+          data-img="mem8.jpg"
+          data-video="surprise.mp4"
+          data-question="What color was the sky that day?"
+          data-option-a="Soft pink"
+          data-option-b="Golden orange"
+          data-option-c="Lavender"
+          data-option-d="All of the above"
+          data-correct="d"
+          style="left: 74%; top: 58%;">
+          <span>📍</span>
+        </button>
+        <button class="map-pin"
+          data-title="Random Adventure"
+          data-caption="Laughing until we couldn’t."
+          data-img="mem1.jpg"
+          data-video="surprise.mp4"
+          data-question="What was the funniest part?"
+          data-option-a="The wrong turn"
+          data-option-b="The dance"
+          data-option-c="The joke"
+          data-option-d="The playlist"
+          data-correct="a"
+          style="left: 34%; top: 66%;">
+          <span>📍</span>
+        </button>
+        <button class="map-pin"
+          data-title="Cozy Night"
+          data-caption="Soft lights and softer hearts."
+          data-img="mem9.jpg"
+          data-video="surprise.mp4"
+          data-question="Which movie did we watch?"
+          data-option-a="Our comfort movie"
+          data-option-b="A mystery"
+          data-option-c="A comedy"
+          data-option-d="A romance"
+          data-correct="a"
+          style="left: 48%; top: 44%;">
+          <span>📍</span>
+        </button>
+
+        <div class="map-card" id="mapCard" aria-hidden="true">
+          <button class="map-close" id="mapClose" type="button">×</button>
+          <div class="map-card-body">
+            <h3 id="mapCardTitle"></h3>
+            <p id="mapCardCaption"></p>
+          </div>
+
+          <div class="map-quiz" id="mapQuiz">
+            <div class="map-question" id="mapQuestion"></div>
+            <div class="map-options">
+              <button class="map-option" data-opt="a"></button>
+              <button class="map-option" data-opt="b"></button>
+              <button class="map-option" data-opt="c"></button>
+              <button class="map-option" data-opt="d"></button>
+            </div>
+            <div class="map-feedback" id="mapFeedback"></div>
+          </div>
+
+          <div class="map-media" id="mapMedia">
+            <video id="mapVideo" playsinline></video>
+            <div class="seek-wrap">
+              <input id="mapSeek" class="seekbar" type="range" min="0" max="100" value="0" step="0.01"
+                aria-label="Memory video seek" />
+            </div>
+            <img id="mapPhoto" alt="">
+            <button class="map-audio" id="mapAudioBtn" type="button" aria-label="Toggle sound">🔇</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="toArBtn" class="next-map-btn" type="button">Open surprise ✨</button>
+    </div>
+  </section>
+
+  <!-- ================= PHOTO BOOTH ================= -->
+  <section class="scene" id="scene-photobooth">
+    <div class="booth-stage">
+      <header class="booth-header">
+        <h2>Birthday Photo Booth</h2>
+        <p>Strike a pose and capture the moment.</p>
+        <div class="booth-error" id="boothError"></div>
+      </header>
+
+      <div class="booth-body">
+        <div class="booth-frame">
+          <div class="booth-screen" id="boothScreen">
+            <video id="boothVideo" playsinline autoplay muted></video>
+            <canvas id="boothCanvas" aria-hidden="true"></canvas>
+
+            <div class="booth-overlay" aria-hidden="true">
+              <div class="booth-hat"></div>
+              <div class="booth-cheek left"></div>
+              <div class="booth-cheek right"></div>
+              <div class="booth-sticker">HAPPY BIRTHDAY</div>
+              <div class="booth-confetti">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="booth-strip" aria-label="Photo strip">
+          <div class="strip-title">PHOTO STRIP</div>
+          <div class="strip-slot"><img alt=""></div>
+          <div class="strip-slot"><img alt=""></div>
+          <div class="strip-slot"><img alt=""></div>
+          <div class="strip-footer">02.01.2026</div>
+        </aside>
+      </div>
+
+      <div class="booth-controls">
+        <button id="boothSnapBtn" type="button">Take Photo</button>
+        <button id="boothRetakeBtn" type="button" class="booth-ghost">Retake</button>
+      </div>
+
+      <button id="toBirthdayBtn" class="next-map-btn" type="button">Go to birthday ???</button>
+    </div>
+  </section>
+
+  <!-- ================= BIRTHDAY ================= -->
+  <section class="scene" id="scene-birthday">
+    <div class="birthday-stage">
+      <div class="birthday-header center">
+        <svg class="arch-svg" viewBox="0 0 800 220" role="img" aria-label="Happy Birthday, Riya">
+          <defs>
+            <path id="archPath" d="M 60 200 Q 400 20 740 200" />
+          </defs>
+          <text class="arch-text">
+            <textPath href="#archPath" startOffset="50%" text-anchor="middle">
+              Happy Birthday, Riya 💖
+            </textPath>
+          </text>
+        </svg>
+        <p>HAVE A BEAUTIFUL YEAR AHEAD</p>
+      </div>
+
+      <div class="balloon-sky">
+        <div class="confetti">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="balloon" style="--x: 10%; --delay: 0s; --dur: 13s;"><img src="mem1.jpg" alt=""></div>
+        <div class="balloon" style="--x: 26%; --delay: 2.2s; --dur: 11s;"><img src="mem2.jpg" alt=""></div>
+        <div class="balloon" style="--x: 42%; --delay: 1s; --dur: 14s;"><img src="mem3.jpg" alt=""></div>
+        <div class="balloon" style="--x: 58%; --delay: 3s; --dur: 12s;"><img src="mem4.jpg" alt=""></div>
+        <div class="balloon" style="--x: 74%; --delay: 1.5s; --dur: 15s;"><img src="mem5.jpg" alt=""></div>
+        <div class="balloon" style="--x: 88%; --delay: 2.8s; --dur: 13s;"><img src="mem6.jpg" alt=""></div>
+        <div class="balloon" style="--x: 18%; --delay: 4s; --dur: 16s;"><img src="mem7.jpg" alt=""></div>
+        <div class="balloon" style="--x: 66%; --delay: 4.5s; --dur: 12s;"><img src="mem8.jpg" alt=""></div>
+        <div class="balloon" style="--x: 36%; --delay: 5.2s; --dur: 14s;"><img src="mem9.jpg" alt=""></div>
+        <div class="balloon" style="--x: 82%; --delay: 6s; --dur: 15s;"><img src="mem10.jpg" alt=""></div>
+        <div class="balloon" style="--x: 6%; --delay: 6.5s; --dur: 14s;"><img src="mem1.jpg" alt=""></div>
+        <div class="balloon" style="--x: 50%; --delay: 7.2s; --dur: 13s;"><img src="mem2.jpg" alt=""></div>
+        <div class="balloon" style="--x: 94%; --delay: 8s; --dur: 16s;"><img src="mem3.jpg" alt=""></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="script.js" defer></script>
+</body>
+
+</html>
