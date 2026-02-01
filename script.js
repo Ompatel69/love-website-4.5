@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
       stopPhotoBooth();
     }
     app.currentScene = sceneId;
+    document.body.classList.toggle("photobooth-scroll", sceneId === "scene-photobooth");
 
     document.querySelectorAll(".scene").forEach(s => s.classList.remove("active"));
     const el = document.getElementById(sceneId);
@@ -414,6 +415,14 @@ I chose you, every single day.
     });
   }
 
+  const boothSkipBtn = document.getElementById("boothSkipBtn");
+  if (boothSkipBtn) {
+    boothSkipBtn.addEventListener("click", () => {
+      if (app.currentScene !== "scene-photobooth") return;
+      go("scene-birthday");
+    });
+  }
+
   const toBirthdayBtn = document.getElementById("toBirthdayBtn");
   if (toBirthdayBtn) {
     toBirthdayBtn.addEventListener("click", () => {
@@ -573,6 +582,7 @@ I chose you, every single day.
     const screen = document.getElementById("boothScreen");
     const snapBtn = document.getElementById("boothSnapBtn");
     const retakeBtn = document.getElementById("boothRetakeBtn");
+    const shutterBtn = document.getElementById("boothShutterBtn");
     const stripSlots = Array.from(document.querySelectorAll(".strip-slot img"));
     const errorEl = document.getElementById("boothError");
     if (!video || !canvas || !screen || !snapBtn || !retakeBtn) return;
@@ -605,6 +615,12 @@ I chose you, every single day.
       retakeBtn.addEventListener("click", () => {
         setFrozen(false);
       });
+
+      if (shutterBtn) {
+        shutterBtn.addEventListener("click", () => {
+          snapBtn.click();
+        });
+      }
     }
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
