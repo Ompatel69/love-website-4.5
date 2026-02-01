@@ -1284,7 +1284,7 @@ body.to-video .page-transition {
   position: absolute;
   left: 0;
   top: 0;
-  width: min(380px, 90vw);
+  width: clamp(260px, 90vw, 380px);
   background: rgba(255,255,255,0.92);
   border-radius: 18px;
   box-shadow: 0 24px 60px rgba(0,0,0,0.2);
@@ -1311,6 +1311,7 @@ body.to-video .page-transition {
 .map-card-body h3 {
   font-family: "Playfair Display", serif;
   margin-bottom: 6px;
+  font-size: clamp(1.05rem, 3.4vw, 1.35rem);
 }
 .map-quiz {
   padding: 0 16px 16px;
@@ -1319,6 +1320,7 @@ body.to-video .page-transition {
 .map-question {
   font-weight: 600;
   margin-bottom: 10px;
+  font-size: clamp(0.95rem, 3.2vw, 1.05rem);
 }
 .map-options {
   display: grid;
@@ -1333,7 +1335,7 @@ body.to-video .page-transition {
   background: rgba(255,255,255,0.85);
   cursor: pointer;
   color: #4b2c36;
-  font-size: 0.95rem;
+  font-size: clamp(0.88rem, 3vw, 0.98rem);
 }
 .map-option.correct {
   border-color: #4caf50;
