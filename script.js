@@ -40,6 +40,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     app.currentScene = sceneId;
     document.body.classList.toggle("photobooth-scroll", sceneId === "scene-photobooth");
+    const skipBtn = document.getElementById("globalSkipBtn");
+    if (skipBtn) {
+      skipBtn.style.display = sceneId === "scene-photobooth" ? "none" : "inline-flex";
+    }
 
     document.querySelectorAll(".scene").forEach(s => s.classList.remove("active"));
     const el = document.getElementById(sceneId);
@@ -415,11 +419,22 @@ I chose you, every single day.
     });
   }
 
-  const boothSkipBtn = document.getElementById("boothSkipBtn");
-  if (boothSkipBtn) {
-    boothSkipBtn.addEventListener("click", () => {
-      if (app.currentScene !== "scene-photobooth") return;
-      go("scene-birthday");
+  const globalSkipBtn = document.getElementById("globalSkipBtn");
+  if (globalSkipBtn) {
+    const order = [
+      "scene-intro",
+      "scene-memories",
+      "scene-letter",
+      "scene-video",
+      "scene-map",
+      "scene-photobooth",
+      "scene-birthday"
+    ];
+    globalSkipBtn.addEventListener("click", () => {
+      if (app.currentScene === "scene-photobooth") return;
+      const idx = order.indexOf(app.currentScene);
+      const next = order[(idx + 1) % order.length];
+      go(next);
     });
   }
 
@@ -583,6 +598,8 @@ I chose you, every single day.
     const snapBtn = document.getElementById("boothSnapBtn");
     const retakeBtn = document.getElementById("boothRetakeBtn");
     const shutterBtn = document.getElementById("boothShutterBtn");
+    const downloadBtn = document.getElementById("boothDownloadBtn");
+    const filterImg = document.getElementById("boothFilterImg");
     const stripSlots = Array.from(document.querySelectorAll(".strip-slot img"));
     const errorEl = document.getElementById("boothError");
     if (!video || !canvas || !screen || !snapBtn || !retakeBtn) return;
@@ -590,6 +607,26 @@ I chose you, every single day.
     const setFrozen = (frozen) => {
       app.boothFrozen = frozen;
       screen.classList.toggle("frozen", frozen);
+    };
+
+    const drawCover = (ctx, img, w, h) => {
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      if (!iw || !ih) return;
+      const scale = Math.max(w / iw, h / ih);
+      const sw = iw * scale;
+      const sh = ih * scale;
+      const dx = (w - sw) / 2;
+      const dy = (h - sh) / 2;
+      ctx.drawImage(img, dx, dy, sw, sh);
+    };
+
+    const updateDownloadState = () => {
+      if (!downloadBtn) return;
+      const ready = stripSlots.length >= 3 &&
+        stripSlots.slice(0, 3).every(img => !!img.getAttribute("src"));
+      downloadBtn.disabled = !ready;
+      downloadBtn.classList.toggle("ready", ready);
     };
 
     if (!app.boothInit) {
@@ -601,6 +638,9 @@ I chose you, every single day.
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        if (filterImg && (filterImg.complete || filterImg.naturalWidth)) {
+          drawCover(ctx, filterImg, canvas.width, canvas.height);
+        }
         setFrozen(true);
 
         if (stripSlots.length) {
@@ -609,6 +649,7 @@ I chose you, every single day.
           }
           stripSlots[0].src = canvas.toDataURL("image/png");
           stripSlots[0].alt = "Booth photo";
+          updateDownloadState();
         }
       });
 
@@ -619,6 +660,33 @@ I chose you, every single day.
       if (shutterBtn) {
         shutterBtn.addEventListener("click", () => {
           snapBtn.click();
+        });
+      }
+
+      if (downloadBtn) {
+        downloadBtn.addEventListener("click", async () => {
+          const sources = stripSlots.slice(0, 3).map(img => img.getAttribute("src")).filter(Boolean);
+          if (sources.length < 3) return;
+          const images = await Promise.all(sources.map(src => new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.src = src;
+          })));
+          const w = images[0].naturalWidth || 600;
+          const h = images[0].naturalHeight || 800;
+          const out = document.createElement("canvas");
+          out.width = w;
+          out.height = h * images.length;
+          const outCtx = out.getContext("2d");
+          outCtx.fillStyle = "#ffffff";
+          outCtx.fillRect(0, 0, out.width, out.height);
+          images.forEach((img, i) => {
+            outCtx.drawImage(img, 0, i * h, w, h);
+          });
+          const link = document.createElement("a");
+          link.download = "photo-strip.png";
+          link.href = out.toDataURL("image/png");
+          link.click();
         });
       }
     }
@@ -646,6 +714,8 @@ I chose you, every single day.
       video.srcObject = app.cameraStream;
       video.play().catch(() => {});
     }
+
+    updateDownloadState();
   }
 
   function stopPhotoBooth() {
