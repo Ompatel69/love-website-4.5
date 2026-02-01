@@ -609,11 +609,11 @@ I chose you, every single day.
       screen.classList.toggle("frozen", frozen);
     };
 
-    const drawCover = (ctx, img, w, h) => {
+    const drawContain = (ctx, img, w, h) => {
       const iw = img.naturalWidth || img.width;
       const ih = img.naturalHeight || img.height;
       if (!iw || !ih) return;
-      const scale = Math.max(w / iw, h / ih);
+      const scale = Math.min(w / iw, h / ih);
       const sw = iw * scale;
       const sh = ih * scale;
       const dx = (w - sw) / 2;
@@ -635,13 +635,29 @@ I chose you, every single day.
       snapBtn.addEventListener("click", () => {
         if (!video.videoWidth) return;
         const ctx = canvas.getContext("2d");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const targetW = screen.clientWidth || video.videoWidth;
+        const targetH = screen.clientHeight || video.videoHeight;
+        const targetAspect = targetW / targetH;
+        const sourceAspect = video.videoWidth / video.videoHeight;
+        let sx = 0;
+        let sy = 0;
+        let sWidth = video.videoWidth;
+        let sHeight = video.videoHeight;
+        if (sourceAspect > targetAspect) {
+          sWidth = Math.round(video.videoHeight * targetAspect);
+          sx = Math.round((video.videoWidth - sWidth) / 2);
+        } else {
+          sHeight = Math.round(video.videoWidth / targetAspect);
+          sy = Math.round((video.videoHeight - sHeight) / 2);
+        }
+        canvas.width = sWidth;
+        canvas.height = sHeight;
+        ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
         if (filterImg && (filterImg.complete || filterImg.naturalWidth)) {
-          drawCover(ctx, filterImg, canvas.width, canvas.height);
+          drawContain(ctx, filterImg, canvas.width, canvas.height);
         }
         setFrozen(true);
+        setTimeout(() => setFrozen(false), 250);
 
         if (stripSlots.length) {
           for (let i = stripSlots.length - 1; i > 0; i--) {
