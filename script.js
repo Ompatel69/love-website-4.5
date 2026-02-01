@@ -560,11 +560,17 @@ I chose you, every single day.
                 audioBtn.textContent = "🔇";
               });
             }
-            mapVideo.onended = () => {
-              mapPhoto.src = photoSrc;
-              mapPhoto.alt = title.textContent || "Memory";
-              media.classList.add("show-photo");
-            };
+        mapVideo.onended = () => {
+          mapPhoto.src = photoSrc;
+          mapPhoto.alt = title.textContent || "Memory";
+          media.classList.add("show-photo");
+          mapPhoto.onload = () => {
+            media.classList.add("show-photo");
+          };
+          mapPhoto.onerror = () => {
+            media.classList.add("show-photo");
+          };
+        };
           } else {
             e.currentTarget.classList.add("wrong");
             feedback.textContent = "Try again 💞";
