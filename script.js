@@ -18,10 +18,11 @@ document.addEventListener("DOMContentLoaded", () => {
   typingAudio.loop = true;
   typingAudio.volume = 0.55;
 
-  const signatureAudio = new Audio("pen_signature.mp3");
+  const signatureAudio = new Audio("pen-signature.mp3");
   signatureAudio.preload = "auto";
   signatureAudio.loop = true;
   signatureAudio.volume = 0.65;
+  let typingActive = false;
 
   function safePlay(audio) {
     if (!audio) return;
@@ -43,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     safeStop(typingAudio);
     safePlay(signatureAudio);
     safeStop(signatureAudio);
+    if (typingActive) safePlay(typingAudio);
   }, { once: true });
 
   function setAppTimeout(fn, ms) {
@@ -69,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     app.token++;
     clearAllTimers();
     if (app.currentScene === "scene-intro" && sceneId !== "scene-intro") {
+      typingActive = false;
       safeStop(typingAudio);
       safeStop(signatureAudio);
     }
@@ -119,9 +122,11 @@ document.addEventListener("DOMContentLoaded", () => {
       typeSpeed: 50,
       showCursor: false,
       onBegin: () => {
+        typingActive = true;
         safePlay(typingAudio);
       },
       onComplete: () => {
+        typingActive = false;
         safeStop(typingAudio);
         const box = document.getElementById("signatureBox");
         if (box) box.style.display = "flex";
