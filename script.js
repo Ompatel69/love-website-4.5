@@ -12,6 +12,53 @@ document.addEventListener("DOMContentLoaded", () => {
     boothFrozen: false,
   };
 
+  // ---- Typing sound (simple synth ticks, no external file) ----
+  const typingSound = (() => {
+    let ctx = null;
+    let tickId = null;
+    const tickMs = 70;
+
+    function ensureContext() {
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === "suspended") ctx.resume();
+      return ctx;
+    }
+
+    function playTick() {
+      const audio = ensureContext();
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = "square";
+      osc.frequency.value = 750 + Math.random() * 120;
+      gain.gain.setValueAtTime(0, audio.currentTime);
+      gain.gain.linearRampToValueAtTime(0.06, audio.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.06);
+      osc.connect(gain).connect(audio.destination);
+      osc.start();
+      osc.stop(audio.currentTime + 0.07);
+    }
+
+    function start() {
+      if (tickId) return;
+      playTick();
+      tickId = window.setInterval(playTick, tickMs);
+    }
+
+    function stop() {
+      if (!tickId) return;
+      window.clearInterval(tickId);
+      tickId = null;
+    }
+
+    return { start, stop };
+  })();
+
+  // Unlock audio on first user interaction (autoplay policies).
+  window.addEventListener("pointerdown", () => {
+    typingSound.start();
+    typingSound.stop();
+  }, { once: true });
+
   function setAppTimeout(fn, ms) {
     const myToken = app.token;
     const id = window.setTimeout(() => {
@@ -35,6 +82,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function go(sceneId) {
     app.token++;
     clearAllTimers();
+    if (app.currentScene === "scene-intro" && sceneId !== "scene-intro") {
+      typingSound.stop();
+    }
     if (app.currentScene === "scene-photobooth" && sceneId !== "scene-photobooth") {
       stopPhotoBooth();
     }
@@ -81,7 +131,11 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
       typeSpeed: 50,
       showCursor: false,
+      onBegin: () => {
+        typingSound.start();
+      },
       onComplete: () => {
+        typingSound.stop();
         const box = document.getElementById("signatureBox");
         if (box) box.style.display = "flex";
         initSignature();
