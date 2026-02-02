@@ -1,3 +1,4 @@
 rose-bouquet.glb filter=lfs diff=lfs merge=lfs -text
 rose-bouquet-android.glb filter=lfs diff=lfs merge=lfs -text
+rose-bouquet-android-lite.glb filter=lfs diff=lfs merge=lfs -text
 rose-bouquet.usdz filter=lfs diff=lfs merge=lfs -text

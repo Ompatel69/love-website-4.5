@@ -137,6 +137,7 @@
     <div class="native-ar" id="nativeAr">
       <a id="arIos" rel="ar" href="rose-bouquet.usdz">Open in AR (iOS)</a>
       <a id="arAndroid" href="#">Open in AR (Android)</a>
+      <a id="arAndroidLite" href="#">Open in AR (Android Lite)</a>
     </div>
     <button id="backBtn" class="back-btn" type="button">Back</button>
   </div>
@@ -151,11 +152,13 @@
     const backBtn = document.getElementById("backBtn");
     const arIos = document.getElementById("arIos");
     const arAndroid = document.getElementById("arAndroid");
+    const arAndroidLite = document.getElementById("arAndroidLite");
     const nativeAr = document.getElementById("nativeAr");
 
     const cacheBust = "20260202";
     const modelGlb = "https://media.githubusercontent.com/media/Ompatel69/love-website-4.5/main/rose-bouquet.glb";
     const modelGlbAndroid = "https://media.githubusercontent.com/media/Ompatel69/love-website-4.5/main/rose-bouquet-android.glb";
+    const modelGlbAndroidLite = "https://media.githubusercontent.com/media/Ompatel69/love-website-4.5/main/rose-bouquet-android-lite.glb";
     const modelUsdz = "https://media.githubusercontent.com/media/Ompatel69/love-website-4.5/main/rose-bouquet.usdz";
     if (arIos) arIos.href = modelUsdz;
     if (arAndroid) {
@@ -167,6 +170,19 @@
         `&title=${encodeURIComponent(title)}`;
       arAndroid.href = sceneViewerUrl;
       arAndroid.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.location.href = sceneViewerUrl;
+      });
+    }
+    if (arAndroidLite) {
+      const title = "Rose Bouquet (Lite)";
+      const sceneViewerUrl =
+        "https://arvr.google.com/scene-viewer/1.0" +
+        `?file=${encodeURIComponent(modelGlbAndroidLite)}` +
+        `&mode=ar_preferred` +
+        `&title=${encodeURIComponent(title)}`;
+      arAndroidLite.href = sceneViewerUrl;
+      arAndroidLite.addEventListener("click", (e) => {
         e.preventDefault();
         window.location.href = sceneViewerUrl;
       });
