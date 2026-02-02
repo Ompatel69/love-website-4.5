@@ -172,16 +172,7 @@
         window.location.href = intentUrl;
       });
     }
-    const ua = navigator.userAgent || "";
-    const isiOS = /iphone|ipad|ipod/i.test(ua);
-    const isAndroid = /android/i.test(ua);
-    if (nativeAr) {
-      if (isiOS) {
-        if (arAndroid) arAndroid.style.display = "none";
-      } else if (isAndroid) {
-        if (arIos) arIos.style.display = "none";
-      }
-    }
+    // Keep both buttons visible; some browsers mis-detect UA and hide the other.
 
     backBtn.addEventListener("click", () => {
       window.location.href = "index.html?scene=birthday";
