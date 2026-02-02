@@ -159,17 +159,15 @@
     if (arIos) arIos.href = modelUsdz;
     if (arAndroid) {
       const title = "Rose Bouquet";
-      const intentUrl =
-        "intent://arvr.google.com/scene-viewer/1.0" +
+      const sceneViewerUrl =
+        "https://arvr.google.com/scene-viewer/1.0" +
         `?file=${encodeURIComponent(modelGlb)}` +
         `&mode=ar_preferred` +
-        `&title=${encodeURIComponent(title)}` +
-        "#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;" +
-        `S.browser_fallback_url=${encodeURIComponent(modelGlb)};end;`;
-      arAndroid.href = intentUrl;
+        `&title=${encodeURIComponent(title)}`;
+      arAndroid.href = sceneViewerUrl;
       arAndroid.addEventListener("click", (e) => {
         e.preventDefault();
-        window.location.href = intentUrl;
+        window.location.href = sceneViewerUrl;
       });
     }
     // Keep both buttons visible; some browsers mis-detect UA and hide the other.
