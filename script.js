@@ -22,6 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
   signatureAudio.preload = "auto";
   signatureAudio.loop = true;
   signatureAudio.volume = 0.65;
+  const birthdayAudio = new Audio("happy-birthday-471211.mp3");
+  birthdayAudio.preload = "auto";
+  birthdayAudio.loop = true;
+  birthdayAudio.volume = 0.6;
   let typingActive = false;
 
   function safePlay(audio) {
@@ -44,6 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
     safeStop(typingAudio);
     safePlay(signatureAudio);
     safeStop(signatureAudio);
+    safePlay(birthdayAudio);
+    safeStop(birthdayAudio);
     if (typingActive) safePlay(typingAudio);
   }, { once: true });
 
@@ -74,6 +80,9 @@ document.addEventListener("DOMContentLoaded", () => {
       typingActive = false;
       safeStop(typingAudio);
       safeStop(signatureAudio);
+    }
+    if (app.currentScene === "scene-birthday" && sceneId !== "scene-birthday") {
+      safeStop(birthdayAudio);
     }
     if (app.currentScene === "scene-photobooth" && sceneId !== "scene-photobooth") {
       stopPhotoBooth();
@@ -522,6 +531,7 @@ LOVE YOU - your munchkin
     const qrCta = document.getElementById("birthdayQrCta");
     const qrImg = document.getElementById("birthdayQrImg");
     if (!qrCta) return;
+    safePlay(birthdayAudio);
     qrCta.classList.remove("show");
     const configured = (document.body.getAttribute("data-public-ar-url") || "").trim();
     const onLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
