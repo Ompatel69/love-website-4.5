@@ -12,51 +12,37 @@ document.addEventListener("DOMContentLoaded", () => {
     boothFrozen: false,
   };
 
-  // ---- Typing sound (simple synth ticks, no external file) ----
-  const typingSound = (() => {
-    let ctx = null;
-    let tickId = null;
-    const tickMs = 70;
+  // ---- Audio (file-based) ----
+  const typingAudio = new Audio("computer-keyboard-typing-290582.mp3");
+  typingAudio.preload = "auto";
+  typingAudio.loop = true;
+  typingAudio.volume = 0.55;
 
-    function ensureContext() {
-      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-      if (ctx.state === "suspended") ctx.resume();
-      return ctx;
-    }
+  const signatureAudio = new Audio("pen_signature.mp3");
+  signatureAudio.preload = "auto";
+  signatureAudio.loop = true;
+  signatureAudio.volume = 0.65;
 
-    function playTick() {
-      const audio = ensureContext();
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      osc.type = "square";
-      osc.frequency.value = 750 + Math.random() * 120;
-      gain.gain.setValueAtTime(0, audio.currentTime);
-      gain.gain.linearRampToValueAtTime(0.06, audio.currentTime + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.06);
-      osc.connect(gain).connect(audio.destination);
-      osc.start();
-      osc.stop(audio.currentTime + 0.07);
-    }
+  function safePlay(audio) {
+    if (!audio) return;
+    if (!audio.paused) return;
+    audio.currentTime = 0;
+    const p = audio.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  }
 
-    function start() {
-      if (tickId) return;
-      playTick();
-      tickId = window.setInterval(playTick, tickMs);
-    }
-
-    function stop() {
-      if (!tickId) return;
-      window.clearInterval(tickId);
-      tickId = null;
-    }
-
-    return { start, stop };
-  })();
+  function safeStop(audio) {
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  }
 
   // Unlock audio on first user interaction (autoplay policies).
   window.addEventListener("pointerdown", () => {
-    typingSound.start();
-    typingSound.stop();
+    safePlay(typingAudio);
+    safeStop(typingAudio);
+    safePlay(signatureAudio);
+    safeStop(signatureAudio);
   }, { once: true });
 
   function setAppTimeout(fn, ms) {
@@ -83,7 +69,8 @@ document.addEventListener("DOMContentLoaded", () => {
     app.token++;
     clearAllTimers();
     if (app.currentScene === "scene-intro" && sceneId !== "scene-intro") {
-      typingSound.stop();
+      safeStop(typingAudio);
+      safeStop(signatureAudio);
     }
     if (app.currentScene === "scene-photobooth" && sceneId !== "scene-photobooth") {
       stopPhotoBooth();
@@ -132,10 +119,10 @@ document.addEventListener("DOMContentLoaded", () => {
       typeSpeed: 50,
       showCursor: false,
       onBegin: () => {
-        typingSound.start();
+        safePlay(typingAudio);
       },
       onComplete: () => {
-        typingSound.stop();
+        safeStop(typingAudio);
         const box = document.getElementById("signatureBox");
         if (box) box.style.display = "flex";
         initSignature();
@@ -176,6 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
       drawing = true;
       hasDrawn = true;
       if (app.signatureIdleId) window.clearTimeout(app.signatureIdleId);
+      safePlay(signatureAudio);
       const p = getPos(e);
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
@@ -190,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function stop() {
       drawing = false;
       armIdle();
+      safeStop(signatureAudio);
     }
 
     canvas.onmousedown = start;
