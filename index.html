@@ -159,12 +159,14 @@
           <div class="tablet-bezel">
             <div class="tablet-camera"></div>
             <div class="tablet-screen">
-              <video id="surpriseVideo" src="surprise.mp4" playsinline autoplay muted></video>
-              <div class="seek-wrap">
-                <input id="mainSeek" class="seekbar" type="range" min="0" max="100" value="0" step="0.01"
-                  aria-label="Video seek" />
-              </div>
-              <button id="mainAudioBtn" class="video-audio-btn" type="button" aria-label="Toggle sound">🔇</button>
+              <iframe
+                id="surpriseVideo"
+                src="https://www.youtube.com/embed/JI-cMLUrmgk?autoplay=1&mute=0&playsinline=1&rel=0&controls=1"
+                title="Your video"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+              </iframe>
             </div>
             <div class="tablet-home"></div>
           </div>

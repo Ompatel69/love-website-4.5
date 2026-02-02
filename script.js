@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (app.currentScene === "scene-video" && sceneId !== "scene-video") {
       const video = document.getElementById("surpriseVideo");
       const audioBtn = document.getElementById("mainAudioBtn");
-      if (video) {
+      if (video && video.tagName === "VIDEO") {
         video.pause();
         video.muted = true;
       }
@@ -387,6 +387,7 @@ LOVE YOU - your munchkin
     const seek = document.getElementById("mainSeek");
     const audioBtn = document.getElementById("mainAudioBtn");
     if (!video) return;
+    if (video.tagName !== "VIDEO") return;
     if (seek) wireSeekbar(video, seek);
     if (audioBtn) {
       audioBtn.onclick = () => {
