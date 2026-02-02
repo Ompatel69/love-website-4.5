@@ -65,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sceneId === "scene-video") initVideoScene();
     if (sceneId === "scene-map") initMapScene();
     if (sceneId === "scene-photobooth") initPhotoBooth();
+    if (sceneId === "scene-birthday") initBirthdayScene();
   }
 
   // ---------------- INTRO TYPING ----------------
@@ -316,6 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function startMagicText() {
     const container = document.getElementById("magicText");
+    const stamp = document.querySelector(".letter-stamp");
     if (!container) return;
 
     const text = `
@@ -323,9 +325,16 @@ I don’t always say this out loud,
 but you are my favorite part of every day.
 You make life softer, warmer,
 and infinitely more beautiful.
-
-This letter is proof —
-I chose you, every single day.
+From the very start of our Friendship 
+I felt a connection different than others the sync felt so nice
+for the first time in my life i was trying hard and finding reasons to see you 
+or talk with you from being scared to keeping my head on your shoulder to the 
+last cheese bite at prithvi those were the moments that felt once i a lifetime
+and that gave assurity of the sync and bond we have, Even on the bad days when i talk 
+with you or see you im happy, i dont have more words to express how i feel about you
+i just pray to god that he keeps you happy all the time thats all i want because the
+bond i brag about is not just for saying, You being sad makes me sad we gotta keep the vibes going 
+LOVE YOU - your munchkin 
   `.trim();
 
     container.innerHTML = "";
@@ -344,6 +353,9 @@ I chose you, every single day.
     if (gifBtn) {
       const totalMs = (words.length - 1) * 110 + 800;
       setTimeout(() => gifBtn.classList.add("show"), totalMs);
+      if (stamp) {
+        setTimeout(() => stamp.classList.add("show"), totalMs + 2000);
+      }
     }
   }
 
@@ -455,6 +467,27 @@ I chose you, every single day.
     });
   }
 
+  function initBirthdayScene() {
+    const qrCta = document.getElementById("birthdayQrCta");
+    const qrImg = document.getElementById("birthdayQrImg");
+    if (!qrCta) return;
+    qrCta.classList.remove("show");
+    const configured = (document.body.getAttribute("data-public-ar-url") || "").trim();
+    const onLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+    const arUrl = configured || new URL("ar.html", window.location.href).href;
+    qrCta.href = arUrl;
+    if (qrImg) {
+      if (configured || !onLocalhost) {
+        const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=16&data=${encodeURIComponent(arUrl)}`;
+        qrImg.src = qrSrc;
+      } else {
+        // Localhost links are not reachable from another phone via QR scan.
+        qrImg.src = "ar-qr.png";
+      }
+    }
+    setAppTimeout(() => qrCta.classList.add("show"), 5000);
+  }
+
   function initMapScene() {
     const map = document.getElementById("mapCanvas");
     const card = document.getElementById("mapCard");
@@ -536,7 +569,6 @@ I chose you, every single day.
         audioBtn.textContent = "🔇";
 
         const videoSrc = pin.getAttribute("data-video") || "";
-        const photoSrc = pin.getAttribute("data-img") || "";
 
         const onOptionClick = (e) => {
           const choice = (e.currentTarget.getAttribute("data-opt") || "").toLowerCase();
@@ -560,17 +592,7 @@ I chose you, every single day.
                 audioBtn.textContent = "🔇";
               });
             }
-        mapVideo.onended = () => {
-          mapPhoto.src = photoSrc;
-          mapPhoto.alt = title.textContent || "Memory";
-          media.classList.add("show-photo");
-          mapPhoto.onload = () => {
-            media.classList.add("show-photo");
-          };
-          mapPhoto.onerror = () => {
-            media.classList.add("show-photo");
-          };
-        };
+        mapVideo.onended = null;
           } else {
             e.currentTarget.classList.add("wrong");
             feedback.textContent = "Try again 💞";

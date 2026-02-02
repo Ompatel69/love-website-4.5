@@ -401,7 +401,10 @@ body.to-video .page-transition {
   font-size: 22px;
 }
 .hint { font-size: 0.95rem; color: rgba(75,44,54,0.75); user-select: none; }
-.letter-paper { padding: 26px 22px 30px; }
+.letter-paper {
+  position: relative;
+  padding: 26px 22px 110px;
+}
 
 /* peek text */
 .peek-cover {
@@ -450,10 +453,12 @@ body.to-video .page-transition {
 .magic-word {
   opacity: 0;
   display: inline-block;
+  margin-right: 0.35ch;
   filter: blur(7px);
   transform: translateY(6px);
   animation: magicReveal 0.65s forwards;
 }
+.magic-word:last-child { margin-right: 0; }
 @keyframes magicReveal { to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 
 
@@ -542,7 +547,24 @@ body.to-video .page-transition {
 
 /* Make sure magic text is visible and not clipped */
 .env-letter.full-open .letter-paper {
-  padding: 26px 22px 30px !important;
+  padding: 26px 22px 110px !important;
+}
+.letter-stamp {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  width: clamp(72px, 14vw, 110px);
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.18));
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+  transition: opacity 500ms ease, transform 600ms ease;
+}
+.letter-stamp.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 .magic-text {
   color: #4b2c36 !important;
@@ -1205,6 +1227,42 @@ body.to-video .page-transition {
   0% { transform: translate(-50%, 0) rotate(-2deg); opacity: 0; }
   10% { opacity: 1; }
   100% { transform: translate(-50%, -120vh) rotate(2deg); opacity: 0; }
+}
+.birthday-qr {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.22);
+  text-decoration: none;
+  color: #4b2c36;
+  opacity: 0;
+  transform: translateY(14px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  z-index: 9;
+}
+.birthday-qr img {
+  width: min(26vw, 112px);
+  height: auto;
+  border-radius: 10px;
+  display: block;
+}
+.birthday-qr span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.birthday-qr.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 
 /* ===== MEMORY MAP SCENE ===== */

@@ -1,242 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AR Photo</title>
-    <style>
-      :root {
-        --bg1: #ffd3e4;
-        --bg2: #ff9ac2;
-        --bg3: #ff6fae;
-      }
-      html, body {
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background: #000;
-      }
-      .fake-ar {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background:
-          radial-gradient(900px 600px at 10% 10%, rgba(255,255,255,0.7), rgba(255,255,255,0) 60%),
-          radial-gradient(800px 600px at 90% 80%, rgba(255,220,235,0.9), rgba(255,220,235,0) 60%),
-          linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 100%);
-      }
-      .scan-frame {
-        position: absolute;
-        inset: 8% 6%;
-        border-radius: 22px;
-        border: 2px solid rgba(255,255,255,0.5);
-        box-shadow: 0 30px 80px rgba(0,0,0,0.25);
-        backdrop-filter: blur(4px);
-      }
-      .scan-line {
-        position: absolute;
-        left: 10%;
-        right: 10%;
-        height: 2px;
-        background: rgba(255,255,255,0.8);
-        top: 20%;
-        animation: scanMove 4s ease-in-out infinite;
-        box-shadow: 0 0 18px rgba(255,255,255,0.8);
-      }
-      @keyframes scanMove {
-        0% { top: 18%; opacity: 0.2; }
-        50% { top: 70%; opacity: 1; }
-        100% { top: 18%; opacity: 0.2; }
-      }
-      .hint {
-        position: absolute;
-        top: 16px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 10px 16px;
-        border-radius: 999px;
-        color: #fff;
-        background: rgba(0,0,0,0.45);
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-        z-index: 10;
-      }
-      .photo-wrap {
-        position: absolute;
-        left: 50%;
-        top: 52%;
-        transform: translate(-50%, -50%);
-        width: min(70vw, 380px);
-        aspect-ratio: 3 / 4;
-        border-radius: 24px;
-        background: rgba(255,255,255,0.25);
-        box-shadow: 0 40px 100px rgba(0,0,0,0.35);
-        overflow: hidden;
-        animation: floatUp 4.5s ease-in-out infinite;
-        will-change: transform;
-      }
-      .photo-wrap img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        filter: drop-shadow(0 30px 60px rgba(0,0,0,0.35));
-      }
-      @keyframes floatUp {
-        0%,100% { transform: translate(-50%, -50%) rotate(-1deg) scale(1); }
-        50% { transform: translate(-50%, -54%) rotate(1deg) scale(1.02); }
-      }
-      .glow {
-        position: absolute;
-        inset: -20%;
-        background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25), rgba(255,255,255,0) 60%);
-        animation: glowPulse 6s ease-in-out infinite;
-        pointer-events: none;
-        will-change: transform;
-      }
-      @keyframes glowPulse {
-        0%,100% { transform: scale(1); opacity: 0.7; }
-        50% { transform: scale(1.08); opacity: 1; }
-      }
-      .sparkles span {
-        position: absolute;
-        font-size: 18px;
-        opacity: 0.7;
-        animation: sparkle 3.5s ease-in-out infinite;
-      }
-      .sparkles span:nth-child(1) { left: 18%; top: 20%; animation-delay: 0s; }
-      .sparkles span:nth-child(2) { left: 78%; top: 32%; animation-delay: .6s; }
-      .sparkles span:nth-child(3) { left: 22%; top: 70%; animation-delay: 1.2s; }
-      .sparkles span:nth-child(4) { left: 74%; top: 76%; animation-delay: 1.8s; }
-      @keyframes sparkle {
-        0%,100% { transform: scale(1); opacity: 0.4; }
-        50% { transform: scale(1.3); opacity: 1; }
-      }
-      .voice-tip {
-        position: fixed;
-        left: 50%;
-        bottom: 20px;
-        transform: translateX(-50%);
-        padding: 10px 16px;
-        border-radius: 999px;
-        background: rgba(0,0,0,0.55);
-        color: #fff;
-        font-family: Arial, sans-serif;
-        font-size: 13px;
-        z-index: 12;
-        display: none;
-      }
-      .voice-btn {
-        position: fixed;
-        left: 50%;
-        bottom: 64px;
-        transform: translateX(-50%);
-        padding: 10px 16px;
-        border-radius: 999px;
-        border: 0;
-        background: rgba(255,255,255,0.9);
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-        cursor: pointer;
-        z-index: 12;
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="fake-ar">
-      <div class="hint">AR Photo ✨</div>
-      <div class="scan-frame">
-        <div class="scan-line"></div>
-      </div>
-      <div class="glow"></div>
-      <div class="photo-wrap">
-        <img src="ar-photo.png" alt="AR Photo">
-      </div>
-      <div class="sparkles" aria-hidden="true">
-        <span>✨</span><span>💫</span><span>✨</span><span>💖</span>
-      </div>
-    </div>
-    <button class="voice-btn" id="voiceBtn" type="button">Enable voice ✨</button>
-    <div class="voice-tip" id="voiceTip">Say “khul ja sim sim” to continue</div>
-    <script>
-      const photo = document.querySelector(".photo-wrap");
-      const glow = document.querySelector(".glow");
-      const voiceBtn = document.getElementById("voiceBtn");
-      const voiceTip = document.getElementById("voiceTip");
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AR Rose Bouquet</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+    .ar-root {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+    #cameraFeed {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #111;
+    }
+    #arCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .top-pill {
+      position: fixed;
+      left: 50%;
+      top: calc(env(safe-area-inset-top) + 12px);
+      transform: translateX(-50%);
+      max-width: min(92vw, 560px);
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.56);
+      color: #fff;
+      font-size: 0.9rem;
+      text-align: center;
+      z-index: 9;
+    }
+    .scan-reticle {
+      position: absolute;
+      left: 50%;
+      top: 68%;
+      width: min(52vw, 220px);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.78);
+      box-shadow: 0 0 18px rgba(255,255,255,0.55);
+      z-index: 8;
+      pointer-events: none;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    .scan-reticle::after {
+      content: "";
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      top: 50%;
+      height: 2px;
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 0 14px rgba(255,255,255,0.8);
+      animation: sweep 2.2s ease-in-out infinite;
+    }
+    .scan-reticle.hide { display: none; }
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(0,0,0,0) 44%, rgba(0,0,0,0.4) 100%);
+      pointer-events: none;
+      z-index: 7;
+    }
+    .back-btn {
+      position: fixed;
+      right: 12px;
+      bottom: calc(env(safe-area-inset-bottom) + 12px);
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.92);
+      color: #4b2c36;
+      font-size: 0.82rem;
+      font-weight: 600;
+      z-index: 10;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+      50% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
+    }
+    @keyframes sweep {
+      0% { top: 12%; opacity: 0.2; }
+      50% { top: 84%; opacity: 1; }
+      100% { top: 12%; opacity: 0.2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ar-root">
+    <video id="cameraFeed" autoplay muted playsinline></video>
+    <canvas id="arCanvas"></canvas>
+    <div class="vignette"></div>
+    <div class="top-pill" id="surfaceHint">Opening camera...</div>
+    <div class="scan-reticle" id="scanReticle"></div>
+    <button id="backBtn" class="back-btn" type="button">Back</button>
+  </div>
 
-      const setParallax = (x, y) => {
-        const dx = (x - 0.5) * 12;
-        const dy = (y - 0.5) * 12;
-        photo.style.transform = `translate(-50%, -50%) translate(${dx}px, ${dy}px)`;
-        glow.style.transform = `translate(${dx * 0.6}px, ${dy * 0.6}px)`;
-      };
+  <script src="libs/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script>
+    const cameraFeed = document.getElementById("cameraFeed");
+    const canvas = document.getElementById("arCanvas");
+    const hint = document.getElementById("surfaceHint");
+    const reticle = document.getElementById("scanReticle");
+    const backBtn = document.getElementById("backBtn");
 
-      window.addEventListener("mousemove", (e) => {
-        const x = e.clientX / window.innerWidth;
-        const y = e.clientY / window.innerHeight;
-        setParallax(x, y);
-      });
+    backBtn.addEventListener("click", () => {
+      window.location.href = "index.html?scene=birthday";
+    });
 
-      const enableDeviceTilt = async () => {
-        if (typeof DeviceOrientationEvent === "undefined") return;
-        if (typeof DeviceOrientationEvent.requestPermission === "function") {
-          const res = await DeviceOrientationEvent.requestPermission();
-          if (res !== "granted") return;
-        }
-        window.addEventListener("deviceorientation", (e) => {
-          const x = (e.gamma || 0) / 90 * 0.5 + 0.5;
-          const y = (e.beta || 0) / 180 * 0.5 + 0.5;
-          setParallax(x, y);
-        });
-      };
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.01, 100);
+    camera.position.set(0, 0.65, 5.8);
 
-      const goBirthday = () => {
-        window.location.href = "index.html?scene=birthday";
-      };
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace || undefined;
 
-      const startVoice = () => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-          voiceTip.textContent = "Voice not supported. Tap to continue.";
-          voiceTip.style.display = "block";
-          voiceBtn.textContent = "Go to birthday";
-          voiceBtn.onclick = goBirthday;
-          voiceBtn.style.display = "block";
-          return;
-        }
-        const recognition = new SpeechRecognition();
-        recognition.lang = "en-US";
-        recognition.continuous = true;
-        recognition.interimResults = false;
-        recognition.onresult = (event) => {
-          const last = event.results[event.results.length - 1][0].transcript.toLowerCase();
-          if (last.includes("khul ja sim sim") || last.includes("khulja sim sim")) {
-            recognition.stop();
-            goBirthday();
+    const hemi = new THREE.HemisphereLight(0xffeef3, 0x133322, 0.9);
+    scene.add(hemi);
+    const key = new THREE.DirectionalLight(0xffffff, 1.15);
+    key.position.set(2, 3, 4);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0xffb9c9, 0.55);
+    fill.position.set(-3, 1, 2);
+    scene.add(fill);
+
+    const bouquetRoot = new THREE.Group();
+    bouquetRoot.position.set(0, -1.45, 0);
+    bouquetRoot.visible = false;
+    scene.add(bouquetRoot);
+
+    let bouquetModel = null;
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+      "rose-bouquet.glb",
+      (gltf) => {
+        bouquetModel = gltf.scene;
+        bouquetModel.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = false;
+            child.receiveShadow = false;
+            if (child.material) child.material.side = THREE.DoubleSide;
           }
-        };
-        recognition.onerror = () => {
-          voiceTip.textContent = "Voice blocked. Tap to continue.";
-          voiceBtn.textContent = "Go to birthday";
-          voiceBtn.onclick = goBirthday;
-          voiceBtn.style.display = "block";
-        };
-        recognition.start();
-      };
+        });
+        bouquetModel.scale.set(1.25, 1.25, 1.25);
+        bouquetModel.position.set(0, 0, 0);
+        bouquetRoot.add(bouquetModel);
+      },
+      undefined,
+      () => {
+        hint.textContent = "Bouquet model failed to load.";
+      }
+    );
 
-      // After 2 seconds, prompt for voice
-      setTimeout(() => {
-        voiceTip.style.display = "block";
-        voiceBtn.style.display = "block";
-      }, 2000);
+    const textPlaneCanvas = document.createElement("canvas");
+    textPlaneCanvas.width = 1024;
+    textPlaneCanvas.height = 256;
+    const textCtx = textPlaneCanvas.getContext("2d");
+    textCtx.fillStyle = "rgba(255,255,255,0.95)";
+    textCtx.beginPath();
+    const r = 90;
+    textCtx.moveTo(8 + r, 28);
+    textCtx.arcTo(1016, 28, 1016, 226, r);
+    textCtx.arcTo(1016, 226, 8, 226, r);
+    textCtx.arcTo(8, 226, 8, 28, r);
+    textCtx.arcTo(8, 28, 1016, 28, r);
+    textCtx.closePath();
+    textCtx.fill();
+    textCtx.fillStyle = "#a3082f";
+    textCtx.font = "bold 92px Arial";
+    textCtx.textAlign = "center";
+    textCtx.textBaseline = "middle";
+    textCtx.fillText("Forever Flower", 512, 128);
+    const textTexture = new THREE.CanvasTexture(textPlaneCanvas);
+    const textMat = new THREE.MeshBasicMaterial({ map: textTexture, transparent: true });
+    const textPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.65, 0.42), textMat);
+    textPlane.position.set(0, -0.1, 0.83);
+    bouquetRoot.add(textPlane);
 
-      voiceBtn.addEventListener("click", async () => {
-        voiceBtn.textContent = "Listening…";
-        await enableDeviceTilt();
-        startVoice();
-      });
-    </script>
-  </body>
+    let placed = false;
+    let startMs = performance.now();
+
+    function render(now) {
+      const t = now * 0.001;
+
+      if (placed) {
+        bouquetRoot.rotation.y = Math.sin(t * 0.8) * 0.08;
+        bouquetRoot.position.y = -1.45 + Math.sin(t * 1.35) * 0.03;
+      }
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    window.addEventListener("resize", onResize);
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false
+        });
+        cameraFeed.srcObject = stream;
+        await cameraFeed.play();
+        hint.textContent = "Move phone slowly to find a flat surface...";
+        setTimeout(() => {
+          hint.textContent = "Surface found. Placing your bouquet.";
+        }, 1800);
+        setTimeout(() => {
+          placed = true;
+          bouquetRoot.visible = true;
+          reticle.classList.add("hide");
+          hint.textContent = "AR bouquet ready: Forever Flower";
+        }, 3600);
+      } catch (err) {
+        hint.textContent = "Camera blocked. Allow camera to view the AR bouquet.";
+      }
+    }
+
+    startCamera();
+  </script>
+</body>
 </html>
