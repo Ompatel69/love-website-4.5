@@ -200,56 +200,70 @@
     scene.add(fill);
 
     const bouquetRoot = new THREE.Group();
-    bouquetRoot.position.set(0, -1.45, 0);
+    bouquetRoot.position.set(0, -1.3, 0);
     bouquetRoot.visible = false;
     scene.add(bouquetRoot);
 
-    let bouquetModel = null;
-    const loader = new THREE.GLTFLoader();
-    loader.load(
-      "rose-bouquet.glb",
-      (gltf) => {
-        bouquetModel = gltf.scene;
-        bouquetModel.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = false;
-            child.receiveShadow = false;
-            if (child.material) child.material.side = THREE.DoubleSide;
-          }
-        });
-        bouquetModel.scale.set(1.25, 1.25, 1.25);
-        bouquetModel.position.set(0, 0, 0);
-        bouquetRoot.add(bouquetModel);
-      },
-      undefined,
-      () => {
-        hint.textContent = "Bouquet model failed to load.";
-      }
-    );
+    const texLoader = new THREE.TextureLoader();
+    const bouquetTex = texLoader.load("bouquet-ref.png");
+    bouquetTex.colorSpace = THREE.SRGBColorSpace || undefined;
+    bouquetTex.anisotropy = 4;
+    const bouquetMat = new THREE.MeshBasicMaterial({
+      map: bouquetTex,
+      transparent: true,
+      alphaTest: 0.35,
+      side: THREE.DoubleSide
+    });
+    const cardGeo = new THREE.PlaneGeometry(1.8, 2.2);
+    const cardA = new THREE.Mesh(cardGeo, bouquetMat);
+    const cardB = new THREE.Mesh(cardGeo, bouquetMat);
+    cardA.rotation.y = Math.PI / 10;
+    cardB.rotation.y = -Math.PI / 10;
+    bouquetRoot.add(cardA, cardB);
 
-    const textPlaneCanvas = document.createElement("canvas");
-    textPlaneCanvas.width = 1024;
-    textPlaneCanvas.height = 256;
-    const textCtx = textPlaneCanvas.getContext("2d");
-    textCtx.fillStyle = "rgba(255,255,255,0.95)";
+    const wrapMat = new THREE.MeshStandardMaterial({
+      color: 0xffe2ef,
+      roughness: 0.7,
+      metalness: 0
+    });
+    const wrap = new THREE.Mesh(new THREE.ConeGeometry(0.75, 1.1, 20, 1, true), wrapMat);
+    wrap.position.set(0, -0.55, -0.12);
+    wrap.rotation.x = Math.PI;
+    bouquetRoot.add(wrap);
+
+    const ribbonMat = new THREE.MeshStandardMaterial({
+      color: 0xc2143a,
+      roughness: 0.4,
+      metalness: 0.05
+    });
+    const ribbon = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.045, 14, 40), ribbonMat);
+    ribbon.position.set(0, -0.45, 0.2);
+    ribbon.rotation.x = Math.PI / 2.2;
+    bouquetRoot.add(ribbon);
+
+    const textCanvas = document.createElement("canvas");
+    textCanvas.width = 1024;
+    textCanvas.height = 256;
+    const textCtx = textCanvas.getContext("2d");
+    textCtx.fillStyle = "rgba(255,255,255,0.96)";
     textCtx.beginPath();
-    const r = 90;
-    textCtx.moveTo(8 + r, 28);
-    textCtx.arcTo(1016, 28, 1016, 226, r);
-    textCtx.arcTo(1016, 226, 8, 226, r);
-    textCtx.arcTo(8, 226, 8, 28, r);
-    textCtx.arcTo(8, 28, 1016, 28, r);
+    const r = 100;
+    textCtx.moveTo(12 + r, 32);
+    textCtx.arcTo(1012, 32, 1012, 224, r);
+    textCtx.arcTo(1012, 224, 12, 224, r);
+    textCtx.arcTo(12, 224, 12, 32, r);
+    textCtx.arcTo(12, 32, 1012, 32, r);
     textCtx.closePath();
     textCtx.fill();
     textCtx.fillStyle = "#a3082f";
-    textCtx.font = "bold 92px Arial";
+    textCtx.font = "bold 104px Arial";
     textCtx.textAlign = "center";
     textCtx.textBaseline = "middle";
     textCtx.fillText("Forever Flower", 512, 128);
-    const textTexture = new THREE.CanvasTexture(textPlaneCanvas);
+    const textTexture = new THREE.CanvasTexture(textCanvas);
     const textMat = new THREE.MeshBasicMaterial({ map: textTexture, transparent: true });
-    const textPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.65, 0.42), textMat);
-    textPlane.position.set(0, -0.1, 0.83);
+    const textPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.48), textMat);
+    textPlane.position.set(0, -0.05, 0.7);
     bouquetRoot.add(textPlane);
 
     let placed = false;
