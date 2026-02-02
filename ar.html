@@ -95,6 +95,27 @@
       font-weight: 600;
       z-index: 10;
     }
+    .native-ar {
+      position: fixed;
+      left: 50%;
+      bottom: calc(env(safe-area-inset-bottom) + 74px);
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      z-index: 10;
+    }
+    .native-ar a {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      color: #4b2c36;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.2);
+    }
     @keyframes pulse {
       0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
       50% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
@@ -113,6 +134,10 @@
     <div class="vignette"></div>
     <div class="top-pill" id="surfaceHint">Opening camera...</div>
     <div class="scan-reticle" id="scanReticle"></div>
+    <div class="native-ar" id="nativeAr">
+      <a id="arIos" rel="ar" href="rose-bouquet.usdz">Open in AR (iOS)</a>
+      <a id="arAndroid" href="#">Open in AR (Android)</a>
+    </div>
     <button id="backBtn" class="back-btn" type="button">Back</button>
   </div>
 
@@ -124,6 +149,33 @@
     const hint = document.getElementById("surfaceHint");
     const reticle = document.getElementById("scanReticle");
     const backBtn = document.getElementById("backBtn");
+    const arIos = document.getElementById("arIos");
+    const arAndroid = document.getElementById("arAndroid");
+    const nativeAr = document.getElementById("nativeAr");
+
+    const modelGlb = new URL("rose-bouquet.glb", window.location.href).href;
+    const modelUsdz = new URL("rose-bouquet.usdz", window.location.href).href;
+    if (arIos) arIos.href = modelUsdz;
+    if (arAndroid) {
+      const title = "Rose Bouquet";
+      arAndroid.href =
+        "intent://arvr.google.com/scene-viewer/1.0" +
+        `?file=${encodeURIComponent(modelGlb)}` +
+        `&mode=ar_preferred` +
+        `&title=${encodeURIComponent(title)}` +
+        "#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;" +
+        `S.browser_fallback_url=${encodeURIComponent(modelGlb)};end;";
+    }
+    const ua = navigator.userAgent || "";
+    const isiOS = /iphone|ipad|ipod/i.test(ua);
+    const isAndroid = /android/i.test(ua);
+    if (nativeAr) {
+      if (isiOS) {
+        if (arAndroid) arAndroid.style.display = "none";
+      } else if (isAndroid) {
+        if (arIos) arIos.style.display = "none";
+      }
+    }
 
     backBtn.addEventListener("click", () => {
       window.location.href = "index.html?scene=birthday";
