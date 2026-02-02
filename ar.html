@@ -155,13 +155,14 @@
 
     const cacheBust = "20260202";
     const modelGlb = "https://media.githubusercontent.com/media/Ompatel69/love-website-4.5/main/rose-bouquet.glb";
+    const modelGlbAndroid = "https://media.githubusercontent.com/media/Ompatel69/love-website-4.5/main/rose-bouquet-android.glb";
     const modelUsdz = "https://media.githubusercontent.com/media/Ompatel69/love-website-4.5/main/rose-bouquet.usdz";
     if (arIos) arIos.href = modelUsdz;
     if (arAndroid) {
       const title = "Rose Bouquet";
       const sceneViewerUrl =
         "https://arvr.google.com/scene-viewer/1.0" +
-        `?file=${encodeURIComponent(modelGlb)}` +
+        `?file=${encodeURIComponent(modelGlbAndroid)}` +
         `&mode=ar_preferred` +
         `&title=${encodeURIComponent(title)}`;
       arAndroid.href = sceneViewerUrl;
