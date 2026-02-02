@@ -207,6 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const letter = document.getElementById("letterCard");
     const hint = document.getElementById("letterHint");
     const magic = document.getElementById("magicText");
+    const stamp = document.querySelector(".letter-stamp");
 
     if (!env || !flap || !slot || !letter || !magic) return;
 
@@ -220,6 +221,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.remove("letter-open");
     const gifBtn = document.getElementById("gifNextBtn");
     if (gifBtn) gifBtn.classList.remove("show");
+    if (stamp) {
+      stamp.classList.remove("show");
+      setAppTimeout(() => stamp.classList.add("show"), 3000);
+    }
 
     let flapOpened = false;
     let pulled = false;
@@ -353,9 +358,6 @@ LOVE YOU - your munchkin
     if (gifBtn) {
       const totalMs = (words.length - 1) * 110 + 800;
       setTimeout(() => gifBtn.classList.add("show"), totalMs);
-      if (stamp) {
-        setTimeout(() => stamp.classList.add("show"), totalMs + 2000);
-      }
     }
   }
 
